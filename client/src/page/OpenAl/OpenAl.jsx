@@ -68,7 +68,7 @@ const OpenAiChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('open-chat', {
+      const response = await axios.post('/openai-chat', {
         prompt: currentInput
       });
 

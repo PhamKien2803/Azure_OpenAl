@@ -7,37 +7,32 @@ const deployment = "gpt-35-turbo";
 if (!endpoint || !apiKey) {
     throw new Error("Vui lòng cấu hình OPENAI_API_ENDPOINT và OPENAI_API_KEY trong Application Settings.");
 }
-
 const client = new AzureOpenAI({
     endpoint,
     apiKey,
     apiVersion: "2024-02-01",
-    deployment,
 });
 
-app.http('openAlchat', {
+app.http('openai-chat', {
     methods: ['POST'],
     authLevel: 'anonymous',
-    route: 'openai-chat',
     handler: async (request, context) => {
-        context.log(`HTTP trigger function processed a request for url "${request.url}"`);
+        context.log(`Function openai-chat đã nhận được một yêu cầu.`);
 
         try {
             const { prompt } = await request.json();
 
             if (!prompt) {
-                context.log.warn("Request không có prompt.");
-                return {
-                    status: 400,
-                    body: "Vui lòng gửi 'prompt' trong body của request."
-                };
+                return { status: 400, body: "Vui lòng gửi 'prompt' trong body của request." };
             }
             const response = await client.chat.completions.create({
+                model: deployment,
                 messages: [
                     { role: "system", content: "You are a helpful assistant." },
                     { role: "user", content: prompt }
                 ],
-                model: deployment,
+                max_tokens: 1024,
+                temperature: 0.7,
             });
 
             const responseMessage = response.choices[0]?.message?.content;
@@ -46,10 +41,10 @@ app.http('openAlchat', {
             };
 
         } catch (error) {
-            context.log.error("Lỗi khi gọi Azure OpenAI hoặc xử lý request:", error);
+            context.log.error("Lỗi khi gọi Azure OpenAI:", error);
             return {
                 status: 500,
-                body: "Đã có lỗi xảy ra phía server."
+                body: "Đã có lỗi xảy ra phía server khi kết nối đến AI."
             };
         }
     }
