@@ -1,23 +1,29 @@
 const { app } = require('@azure/functions');
 const { AzureOpenAI } = require("openai");
 
-const endpoint = process.env.OPENAI_API_ENDPOINT;
-const apiKey = process.env.OPENAI_API_KEY;
-const deployment = "gpt-35-turbo";
-if (!endpoint || !apiKey) {
-    throw new Error("Vui lòng cấu hình OPENAI_API_ENDPOINT và OPENAI_API_KEY trong Application Settings.");
-}
-const client = new AzureOpenAI({
-    endpoint,
-    apiKey,
-    apiVersion: "2024-02-01",
-});
-
 app.http('openai-chat', {
     methods: ['POST'],
     authLevel: 'anonymous',
     handler: async (request, context) => {
         context.log(`Function openai-chat đã nhận được một yêu cầu.`);
+
+        const endpoint = process.env.OPENAI_API_ENDPOINT;
+        const apiKey = process.env.OPENAI_API_KEY;
+        const deployment = "gpt-35-turbo";
+
+        if (!endpoint || !apiKey) {
+            context.log("Thiếu endpoint hoặc apiKey trong môi trường.");
+            return {
+                status: 500,
+                body: "Chưa cấu hình đầy đủ OPENAI_API_ENDPOINT và OPENAI_API_KEY."
+            };
+        }
+
+        const client = new AzureOpenAI({
+            endpoint,
+            apiKey,
+            apiVersion: "2024-02-01",
+        });
 
         try {
             const { prompt } = await request.json();
@@ -25,6 +31,7 @@ app.http('openai-chat', {
             if (!prompt) {
                 return { status: 400, body: "Vui lòng gửi 'prompt' trong body của request." };
             }
+
             const response = await client.chat.completions.create({
                 model: deployment,
                 messages: [
@@ -41,7 +48,7 @@ app.http('openai-chat', {
             };
 
         } catch (error) {
-            context.log.error("Lỗi khi gọi Azure OpenAI:", error);
+            context.log("Lỗi khi gọi Azure OpenAI:", error);
             return {
                 status: 500,
                 body: "Đã có lỗi xảy ra phía server khi kết nối đến AI."
