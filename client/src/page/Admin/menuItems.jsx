@@ -8,12 +8,9 @@ import ExpertFormManagementPage from "./ExpertFormManagementPage";
 import StatisticsPage from "./StatisticsPage";
 import BlogDetailPage from "./BlogDetailPage";
 import AdminLayout from "./AdminLayout";
+import OpenAiChatPage from "./OpenAiChatPage";
 
 const menuItems = [
-  // {
-  //   path: "/admin-dashboard",
-  //   component: AdminLayout,
-  // },
   {
     text: "Trang chủ",
     icon: <BarChartIcon />,
@@ -35,6 +32,12 @@ const menuItems = [
   {
     path: "/admin-dashboard/blogs-detail/:id",
     component: BlogDetailPage
+  },
+  {
+    text: "OpenAI Chat",
+    icon: <ArticleIcon />,
+    path: "/admin-dashboard/openai-chat",
+    component: OpenAiChatPage
   }
 ];
 
