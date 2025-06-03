@@ -8,6 +8,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import axios from 'axios';
 
 const typingAnimation = keyframes`
   0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; }
@@ -67,24 +68,32 @@ const OpenAiChat = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/open-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: currentInput }),
+      const response = await axios.post('open-chat', {
+        prompt: currentInput
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Lỗi từ server: ${response.status} - ${errorText}`);
-      }
-
-      const aiResponseText = await response.text();
+      const aiResponseText = response.data;
       const aiMessage = { sender: 'ai', text: aiResponseText };
       setMessages(prev => [...prev, aiMessage]);
 
     } catch (error) {
       console.error("Lỗi khi gọi API:", error);
-      const errorMessage = { sender: 'ai', text: `Rất tiếc, đã có lỗi xảy ra. Vui lòng thử lại sau.` };
+      let errorMessageText = "Rất tiếc, đã có lỗi xảy ra. Vui lòng thử lại sau.";
+
+      if (error.response) {
+        console.error("Data:", error.response.data);
+        console.error("Status:", error.response.status);
+        errorMessageText = `Lỗi từ server: ${error.response.status}${error.response.data ? ` - ${typeof error.response.data === 'string' ? error.response.data : JSON.stringify(error.response.data)}` : ''}`;
+
+      } else if (error.request) {
+        console.error("Request:", error.request);
+        errorMessageText = "Không thể kết nối đến server. Vui lòng kiểm tra lại đường truyền mạng.";
+      } else {
+        console.error('Error', error.message);
+        errorMessageText = `Lỗi thiết lập yêu cầu: ${error.message}`;
+      }
+
+      const errorMessage = { sender: 'ai', text: errorMessageText };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
